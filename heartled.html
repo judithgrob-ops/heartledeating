@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heartled Eating</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f4f6f8;color:#24323f}
+.wrap{max-width:760px;margin:auto;padding:18px}
+.card{background:#ffffff;border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+h1{margin:0;font-size:1.5rem}
+h2{margin:.2rem 0 .6rem 0;font-size:1.1rem;color:#3b556b}
+.small{color:#6b7280;font-size:.9rem}
+input,textarea,button{font-size:1rem;padding:11px;border-radius:12px;border:1px solid #d7dee6;width:100%;box-sizing:border-box}
+textarea{min-height:90px;resize:vertical}
+button{background:#cc0066;color:white;border:none;margin-top:10px;cursor:pointer}
+button.secondary{background:#f3d1e0;color:#7a003d}
+.nav{display:flex;gap:8px;margin-top:10px}
+.nav button{width:auto;padding:8px 14px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border-bottom:1px solid #eef2f6;padding:8px;text-align:center;font-size:.95rem}
+th:first-child,td:first-child{text-align:left;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="card">
+<h1>Heartled Eating</h1>
+<div id="date" class="small"></div>
+<div class="nav">
+<button class="secondary" onclick="changeDay(-1)">◀ Previous</button>
+<button class="secondary" onclick="changeDay(1)">Next ▶</button>
+</div>
+</div>
+
+<div class="card">
+<h2>Morning Intention</h2>
+<textarea id="intention" placeholder="What is your intention around eating today?"></textarea>
+<button id="saveIntention" onclick="saveText('intention')">Save</button>
+</div>
+
+<div class="card">
+<h2>Daily Eating Check</h2>
+<table id="mealTable">
+<thead>
+<tr>
+<th></th>
+<th>Meal 1</th>
+<th>Meal 2</th>
+<th>Meal 3</th>
+<th>Meal 4</th>
+<th>Meal 5</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>Anchored</td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
+<tr><td>Hungry</td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
+<tr><td>Aligned Food</td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
+<tr><td>Left Balanced</td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
+</tbody>
+</table>
+<button class="secondary" onclick="addMealColumn()">Add meal</button>
+<button onclick="saveTable()">Save table</button>
+</div>
+
+<div class="card">
+<label>End of Day Gains</label>
+<textarea id="gains"></textarea>
+<button id="saveGains" onclick="saveText('gains')">Save</button>
+<label>Daily Growth Opportunity</label>
+<textarea id="growth"></textarea>
+<button id="saveGrowth" onclick="saveText('growth')">Save</button>
+</div>
+
+</div>
+
+<script>
+let currentDate=new Date();
+
+function key(){return "heartled-"+currentDate.toISOString().slice(0,10);} 
+
+function updateDateLabel(){
+const d=currentDate.toISOString().slice(0,10);
+document.getElementById("date").innerText="Date: "+d;
+}
+
+function getData(){return JSON.parse(localStorage.getItem(key())||"{}");}
+function setData(d){localStorage.setItem(key(),JSON.stringify(d));}
+
+function saveText(field){
+const d=getData();
+if(field==='intention') d.intention=document.getElementById('intention').value;
+if(field==='gains') d.gains=document.getElementById('gains').value;
+if(field==='growth') d.growth=document.getElementById('growth').value;
+setData(d);
+
+// hide the save button
+if(field==='intention') document.getElementById('saveIntention').style.display='none';
+if(field==='gains') document.getElementById('saveGains').style.display='none';
+if(field==='growth') document.getElementById('saveGrowth').style.display='none';
+}
+
+function saveTable(){
+const d=getData();
+const table=document.getElementById("mealTable");
+let data=[];
+for(let r=1;r<table.rows.length;r++){
+let row=[];
+for(let c=1;c<table.rows[r].cells.length;c++){
+row.push(table.rows[r].cells[c].querySelector("input").checked);
+}
+data.push(row);
+}
+d.table=data;
+d.cols=table.rows[0].cells.length-1;
+setData(d);
+}
+
+function clearChecks(){
+const table=document.getElementById("mealTable");
+for(let r=1;r<table.rows.length;r++){
+for(let c=1;c<table.rows[r].cells.length;c++){
+table.rows[r].cells[c].querySelector("input").checked=false;
+}
+}
+}
+
+function load(){
+updateDateLabel();
+const d=getData();
+intention.value=d.intention||"";
+gains.value=d.gains||"";
+growth.value=d.growth||"";
+
+// hide save buttons if already saved
+if(d.intention) document.getElementById('saveIntention').style.display='none';
+if(d.gains) document.getElementById('saveGains').style.display='none';
+if(d.growth) document.getElementById('saveGrowth').style.display='none';
+
+const table=document.getElementById("mealTable");
+
+// reset to 5 columns first
+while(table.rows[0].cells.length>6){
+for(let r=0;r<table.rows.length;r++)table.rows[r].deleteCell(-1);
+}
+
+if(d.cols){
+while(table.rows[0].cells.length-1<d.cols)addMealColumn(false);
+}
+
+clearChecks();
+
+if(d.table){
+for(let r=0;r<d.table.length;r++){
+for(let c=0;c<d.table[r].length;c++){
+let cell=table.rows[r+1].cells[c+1];
+if(cell)cell.querySelector("input").checked=d.table[r][c];
+}
+}
+}
+}
+
+function addMealColumn(save=true){
+const table=document.getElementById("mealTable");
+const col=table.rows[0].cells.length;
+let th=document.createElement("th");
+th.innerText="Meal "+col;
+table.rows[0].appendChild(th);
+for(let r=1;r<table.rows.length;r++){
+let td=document.createElement("td");
+let cb=document.createElement("input");
+cb.type="checkbox";
+td.appendChild(cb);
+table.rows[r].appendChild(td);
+}
+if(save)saveTable();
+}
+
+function changeDay(offset){
+saveTable();
+saveText('intention');
+saveText('gains');
+saveText('growth');
+currentDate.setDate(currentDate.getDate()+offset);
+load();
+}
+
+load();
+</script>
+</body>
+</html>
