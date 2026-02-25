@@ -11,7 +11,7 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;bac
 h1{margin:0;font-size:1.5rem}
 h2{margin:.2rem 0 .6rem 0;font-size:1.1rem;color:#3b556b}
 .small{color:#6b7280;font-size:.9rem}
-input,textarea,button{font-size:1rem;padding:11px;border-radius:12px;border:1px solid #d7dee6;width:100%;box-sizing:border-box}
+input,textarea,button,select{font-size:1rem;padding:11px;border-radius:12px;border:1px solid #d7dee6;width:100%;box-sizing:border-box}
 textarea{min-height:90px;resize:vertical}
 button{background:#cc0066;color:white;border:none;margin-top:10px;cursor:pointer}
 button.secondary{background:#f3d1e0;color:#7a003d}
@@ -20,11 +20,22 @@ button.secondary{background:#f3d1e0;color:#7a003d}
 table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border-bottom:1px solid #eef2f6;padding:8px;text-align:center;font-size:.95rem}
 th:first-child,td:first-child{text-align:left;font-weight:600}
+th{transition:background .2s}
+@media (max-width:600px){
+.wrap{padding:10px}
+.card{padding:12px;margin:10px 0;border-radius:16px}
+h1{font-size:1.25rem}
+h2{font-size:1rem}
+input,textarea,button,select{padding:9px;font-size:.95rem}
+th,td{padding:6px;font-size:.85rem}
+textarea{min-height:70px}
+}
+.mealLabels{display:grid;grid-template-columns:1fr;gap:8px;margin-top:8px}
+.mealLabels input{padding:8px}
 </style>
 </head>
 <body>
 <div class="wrap">
-
 <div class="card">
 <h1>Heartled Eating</h1>
 <div id="date" class="small"></div>
@@ -33,13 +44,22 @@ th:first-child,td:first-child{text-align:left;font-weight:600}
 <button class="secondary" onclick="changeDay(1)">Next ▶</button>
 </div>
 </div>
-
 <div class="card">
 <h2>Morning Intention</h2>
-<textarea id="intention" placeholder="What is your intention around eating today?"></textarea>
+<textarea id="intention"></textarea>
 <button id="saveIntention" onclick="saveText('intention')">Save</button>
 </div>
-
+<div class="card">
+<h2>Meals</h2>
+<div class="mealLabels">
+<input id="mealLabel1" placeholder="1">
+<input id="mealLabel2" placeholder="2">
+<input id="mealLabel3" placeholder="3">
+<input id="mealLabel4" placeholder="4">
+<input id="mealLabel5" placeholder="5">
+</div>
+<button onclick="saveMealLabels()">Save meals</button>
+</div>
 <div class="card">
 <h2>Daily Eating Check</h2>
 <table id="mealTable">
@@ -54,17 +74,18 @@ th:first-child,td:first-child{text-align:left;font-weight:600}
 </tr>
 </thead>
 <tbody>
-<tr><td>Anchored</td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-<tr><td>Hungry</td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-<tr><td>Aligned Food</td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
-<tr><td>Left Balanced</td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td><td><input type="checkbox"></td></tr>
+<tr><td>Anchored</td></tr>
+<tr><td>Hungry</td></tr>
+<tr><td>Aligned Food</td></tr>
+<tr><td>Left Balanced</td></tr>
 </tbody>
 </table>
-<button class="secondary" onclick="addMealColumn()">Add meal</button>
 <button onclick="saveTable()">Save table</button>
 </div>
-
 <div class="card">
+<label>Day Reflection</label>
+<textarea id="reflection"></textarea>
+<button id="saveReflection" onclick="saveText('reflection')">Save</button>
 <label>End of Day Gains</label>
 <textarea id="gains"></textarea>
 <button id="saveGains" onclick="saveText('gains')">Save</button>
@@ -72,120 +93,21 @@ th:first-child,td:first-child{text-align:left;font-weight:600}
 <textarea id="growth"></textarea>
 <button id="saveGrowth" onclick="saveText('growth')">Save</button>
 </div>
-
 </div>
-
 <script>
 let currentDate=new Date();
-
-function key(){return "heartled-"+currentDate.toISOString().slice(0,10);} 
-
-function updateDateLabel(){
-const d=currentDate.toISOString().slice(0,10);
-document.getElementById("date").innerText="Date: "+d;
-}
-
+function key(){return "heartled-"+currentDate.toISOString().slice(0,10);}
+function updateDateLabel(){document.getElementById("date").innerText="Date: "+currentDate.toISOString().slice(0,10);}
 function getData(){return JSON.parse(localStorage.getItem(key())||"{}");}
 function setData(d){localStorage.setItem(key(),JSON.stringify(d));}
-
-function saveText(field){
-const d=getData();
-if(field==='intention') d.intention=document.getElementById('intention').value;
-if(field==='gains') d.gains=document.getElementById('gains').value;
-if(field==='growth') d.growth=document.getElementById('growth').value;
-setData(d);
-
-// hide the save button
-if(field==='intention') document.getElementById('saveIntention').style.display='none';
-if(field==='gains') document.getElementById('saveGains').style.display='none';
-if(field==='growth') document.getElementById('saveGrowth').style.display='none';
-}
-
-function saveTable(){
-const d=getData();
-const table=document.getElementById("mealTable");
-let data=[];
-for(let r=1;r<table.rows.length;r++){
-let row=[];
-for(let c=1;c<table.rows[r].cells.length;c++){
-row.push(table.rows[r].cells[c].querySelector("input").checked);
-}
-data.push(row);
-}
-d.table=data;
-d.cols=table.rows[0].cells.length-1;
-setData(d);
-}
-
-function clearChecks(){
-const table=document.getElementById("mealTable");
-for(let r=1;r<table.rows.length;r++){
-for(let c=1;c<table.rows[r].cells.length;c++){
-table.rows[r].cells[c].querySelector("input").checked=false;
-}
-}
-}
-
-function load(){
-updateDateLabel();
-const d=getData();
-intention.value=d.intention||"";
-gains.value=d.gains||"";
-growth.value=d.growth||"";
-
-// hide save buttons if already saved
-if(d.intention) document.getElementById('saveIntention').style.display='none';
-if(d.gains) document.getElementById('saveGains').style.display='none';
-if(d.growth) document.getElementById('saveGrowth').style.display='none';
-
-const table=document.getElementById("mealTable");
-
-// reset to 5 columns first
-while(table.rows[0].cells.length>6){
-for(let r=0;r<table.rows.length;r++)table.rows[r].deleteCell(-1);
-}
-
-if(d.cols){
-while(table.rows[0].cells.length-1<d.cols)addMealColumn(false);
-}
-
-clearChecks();
-
-if(d.table){
-for(let r=0;r<d.table.length;r++){
-for(let c=0;c<d.table[r].length;c++){
-let cell=table.rows[r+1].cells[c+1];
-if(cell)cell.querySelector("input").checked=d.table[r][c];
-}
-}
-}
-}
-
-function addMealColumn(save=true){
-const table=document.getElementById("mealTable");
-const col=table.rows[0].cells.length;
-let th=document.createElement("th");
-th.innerText="Meal "+col;
-table.rows[0].appendChild(th);
-for(let r=1;r<table.rows.length;r++){
-let td=document.createElement("td");
-let cb=document.createElement("input");
-cb.type="checkbox";
-td.appendChild(cb);
-table.rows[r].appendChild(td);
-}
-if(save)saveTable();
-}
-
-function changeDay(offset){
-saveTable();
-saveText('intention');
-saveText('gains');
-saveText('growth');
-currentDate.setDate(currentDate.getDate()+offset);
-load();
-}
-
+function saveText(field){const d=getData();d[field]=document.getElementById(field).value;setData(d);document.getElementById('save'+field.charAt(0).toUpperCase()+field.slice(1)).style.display='none';}
+function saveMealLabels(){const d=getData();d.meals=[mealLabel1.value,mealLabel2.value,mealLabel3.value,mealLabel4.value,mealLabel5.value];setData(d);updateMealHeaders();}
+function updateMealHeaders(){const d=getData();const labels=d.meals||[];const ths=document.querySelectorAll('#mealTable thead th');for(let i=1;i<ths.length;i++){const label=labels[i-1];ths[i].innerText=label?label:("Meal "+i);ths[i].style.background=label?"#f3d1e0":"";}}
+function buildTable(){const table=document.getElementById("mealTable").getElementsByTagName('tbody')[0];for(let r=0;r<table.rows.length;r++){for(let i=0;i<5;i++){let td=document.createElement("td");let sel=document.createElement("select");["-","0","+"].forEach(v=>{let o=document.createElement("option");o.value=v;o.text=v;if(v==="0")o.selected=true;sel.appendChild(o);});td.appendChild(sel);table.rows[r].appendChild(td);}}}
+function saveTable(){const d=getData();const table=document.getElementById("mealTable");let data=[];for(let r=0;r<table.rows.length;r++){let row=[];for(let c=1;c<table.rows[r].cells.length;c++){row.push(table.rows[r].cells[c].querySelector("select").value);}data.push(row);}d.table=data;setData(d);}
+function load(){updateDateLabel();const d=getData();intention.value=d.intention||"";gains.value=d.gains||"";growth.value=d.growth||"";reflection.value=d.reflection||"";if(d.meals){for(let i=0;i<5;i++){document.getElementById("mealLabel"+(i+1)).value=d.meals[i]||"";}}updateMealHeaders();if(d.table){const table=document.getElementById("mealTable");for(let r=0;r<d.table.length;r++){for(let c=0;c<d.table[r].length;c++){let sel=table.rows[r].cells[c+1].querySelector("select");if(sel)sel.value=d.table[r][c];}}}}
+function changeDay(offset){saveTable();currentDate.setDate(currentDate.getDate()+offset);load();}
+buildTable();
 load();
 </script>
 </body>
