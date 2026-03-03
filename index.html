@@ -33,7 +33,6 @@ th:first-child,td:first-child{text-align:left;font-weight:600}
 <button class="secondary" onclick="changeDay(-1)">◀ Previous</button>
 <button class="secondary" onclick="changeDay(1)">Next ▶</button>
 </div>
-<div class="small">Daily log is automatically stored on this device</div>
 </div>
 
 <div class="card">
@@ -56,6 +55,8 @@ th:first-child,td:first-child{text-align:left;font-weight:600}
 <tr><td>Hungry</td><td><input type="checkbox"></td></tr>
 <tr><td>Aligned Food</td><td><input type="checkbox"></td></tr>
 <tr><td>Left Balanced</td><td><input type="checkbox"></td></tr>
+<tr><td>Sugar</td></tr><input type="checkbox"></td></tr>
+<tr><td>Out Of Control</td></tr><input type="checkbox"></td></tr>
 </tbody>
 </table>
 <button class="secondary" onclick="addMealColumn()">Add meal</button>
@@ -63,8 +64,10 @@ th:first-child,td:first-child{text-align:left;font-weight:600}
 </div>
 
 <div class="card">
-<label>End of Day Gains</label>
-<textarea id="gains"></textarea>
+<label>End of Day Wins</label>
+<textarea id="wins"></textarea>
+<label>End of Day Wins</label>
+<textarea id="wins"></textarea>
 <label>Daily Growth Opportunity</label>
 <textarea id="growth"></textarea>
 <button onclick="saveText()">Save</button>
@@ -179,3 +182,4 @@ load();
 </script>
 </body>
 </html>
+
